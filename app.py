@@ -1,25 +1,45 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 import os
 from flask_cors import CORS
+from dotenv import load_dotenv
+import requests
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+load_dotenv()
+PUSHOVER_USER_KEY = os.environ.get('PUSHOVER_USER_KEY')
+PUSHOVER_APP_TOKEN = os.environ.get('PUSHOVER_APP_TOKEN')
+
 @app.route('/ring', methods=['POST'])
 def ring_doorbell():
-    # Get the message and image from the form submission
     message = request.form.get('message')
     image = request.files.get('image')
-    
-    # Response back with the data received
-    response = {
-        'status': 'success',
+    image_uploaded = False
+    pushover_data = {
+        'user': PUSHOVER_USER_KEY,
+        'token': PUSHOVER_APP_TOKEN,
         'message': message,
-        'image_uploaded': bool(image),
-        'image_path': image.filename if image else None
     }
-    
-    return jsonify(response)
+    if image:
+        image_uploaded = True
+        pushover_data['attachment'] = (image.filename, image.stream, image.mimetype)
+    # Send request to Pushover API
+    try:
+        pushover_response = requests.post('https://api.pushover.net/1/messages.json', data=pushover_data)
+        pushover_response.raise_for_status()  # Raise an exception for 4xx/5xx responses
+
+        pushover_result = pushover_response.json()
+        response = {
+            'status': 'success',
+            'pushover_status': pushover_result.get('status'),
+            'message': message,
+            'image_uploaded': bool(image)
+        }
+        return make_response(jsonify(response), 200)
+
+    except requests.exceptions.RequestException as e:
+        return make_response(jsonify({'status': 'error', 'error': str(e)}), 500)
 
 if __name__ == '__main__':
     app.run(debug=True)
