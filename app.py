@@ -19,7 +19,9 @@ def home():
 @app.route('/ring', methods=['POST'])
 def ring_doorbell():
     message = request.form.get('message')
+    print(message)
     image = request.files.get('image')
+    print(image)
     image_uploaded = False
     pushover_data = {
         'user': PUSHOVER_USER_KEY,
