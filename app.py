@@ -5,12 +5,16 @@ from dotenv import load_dotenv
 import requests
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://sean-a-ogrady.github.io/qrbell-website/"}})
-#CORS(app)
+# CORS(app, resources={r"/*": {"origins": "https://sean-a-ogrady.github.io/qrbell-website/"}})
+CORS(app)
 
 load_dotenv()
 PUSHOVER_USER_KEY = os.environ.get('PUSHOVER_USER_KEY')
 PUSHOVER_APP_TOKEN = os.environ.get('PUSHOVER_APP_TOKEN')
+
+@app.route('/')
+def home():
+    return 'Hello, World!'
 
 @app.route('/ring', methods=['POST'])
 def ring_doorbell():
