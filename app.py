@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 import requests
 
 app = Flask(__name__)
-# CORS(app, resources={r"/*": {"origins": "https://sean-a-ogrady.github.io/qrbell-website/"}})
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "https://sean-a-ogrady.github.io/qrbell-website/"}})
+# CORS(app)
 
 load_dotenv()
 PUSHOVER_USER_KEY = os.environ.get('PUSHOVER_USER_KEY')
@@ -19,9 +19,7 @@ def home():
 @app.route('/ring', methods=['POST'])
 def ring_doorbell():
     message = request.form.get('message')
-    print(message)
     image = request.files.get('image')
-    print(image)
     image_uploaded = False
     pushover_data = {
         'user': PUSHOVER_USER_KEY,
