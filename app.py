@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 import requests
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "https://sean-a-ogrady.github.io/qrbell-website/"}})
+#CORS(app)
 
 load_dotenv()
 PUSHOVER_USER_KEY = os.environ.get('PUSHOVER_USER_KEY')
@@ -26,7 +27,7 @@ def ring_doorbell():
         pushover_data['attachment'] = (image.filename, image.stream, image.mimetype)
     # Send request to Pushover API
     try:
-        pushover_response = requests.post('https://api.pushover.net/1/messages.json', data=pushover_data)
+        pushover_response = requests.post('https://api.pushover.net/1/messages.json', data=pushover_data, files=files)
         pushover_response.raise_for_status()  # Raise an exception for 4xx/5xx responses
 
         pushover_result = pushover_response.json()
