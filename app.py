@@ -31,7 +31,7 @@ def ring_doorbell():
         pushover_data['attachment'] = (image.filename, image.stream, image.mimetype)
     # Send request to Pushover API
     try:
-        pushover_response = requests.post('https://api.pushover.net/1/messages.json', data=pushover_data, files=files)
+        pushover_response = requests.post('https://api.pushover.net/1/messages.json', data=pushover_data)
         pushover_response.raise_for_status()  # Raise an exception for 4xx/5xx responses
 
         pushover_result = pushover_response.json()
