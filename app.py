@@ -18,21 +18,40 @@ def home():
 
 @app.route('/ring', methods=['POST'])
 def ring_doorbell():
-    message = request.form.get('message')
-    image = request.files.get('image')
-    image_uploaded = False
+    # Extract message and image from the form data
+    message = request.form.get('message', 'Someone is at your door!')
+    image = request.files.get('image')  # Image from form input
+
+    # Prepare the payload for Pushover
     pushover_data = {
-        'user': PUSHOVER_USER_KEY,
         'token': PUSHOVER_APP_TOKEN,
-        'message': message,
+        'user': PUSHOVER_USER_KEY,
+        'message': message
     }
+
+    # Prepare the file for Pushover (multipart form-data)
+    files = None
     if image:
-        image_uploaded = True
-        pushover_data['attachment'] = (image.filename, image.stream, image.mimetype)
-    # Send request to Pushover API
+        MAX_FILE_SIZE = 2.5 * 1024 * 1024  # 2.5 MB
+        image_bytes = image.read()
+
+        if len(image_bytes) > MAX_FILE_SIZE:
+            return make_response(jsonify({'status': 'error', 'message': 'File is too large (max 2.5 MB). Add a new image or refresh page to remove.'}), 400)
+        
+        # Reset file pointer to the beginning after reading
+        image.seek(0)
+
+        files = {'attachment': (image.filename, image.stream, image.mimetype)}
+
     try:
-        pushover_response = requests.post('https://api.pushover.net/1/messages.json', data=pushover_data)
-        pushover_response.raise_for_status()  # Raise an exception for 4xx/5xx responses
+        # Send the message and attachment to Pushover
+        pushover_response = requests.post(
+            'https://api.pushover.net/1/messages.json',
+            data=pushover_data,
+            files=files,
+            timeout=10
+        )
+        pushover_response.raise_for_status()  # Raises an error for 4xx/5xx responses
 
         pushover_result = pushover_response.json()
         response = {
